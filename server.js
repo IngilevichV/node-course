@@ -3,6 +3,7 @@ import config from './config';
 import apiRouter from './api';
 import sassMiddleWare from 'node-sass-middleware';
 import path from 'path';
+import serverRender from './serverRender';
 
 const server = express();
 
@@ -16,14 +17,17 @@ server.set('view engine', 'ejs');
 
 server.use(express.static('dist'));
 
-
-server.get('/', (req, res) => {
-  res.render('index', {
-    content: 'Hello Express and EJS'
-  });
+server.get(['/', '/contest/:contestId'], (req, res) => {
+  serverRender(req.params.contestId)
+    .then(({initialMarkup, initialData}) => {
+      res.render('index', {
+        initialMarkup, initialData
+      });
+    })
+    .catch(console.error);
 });
 
-server.use('/api', apiRouter)
+server.use('/api', apiRouter);
 server.use(express.static('public'));
 
-server.listen(config.port, () => console.info('Express listening on port', config.port));
+server.listen(config.port, config.host, () => console.info('Express listening on port', config.port));
